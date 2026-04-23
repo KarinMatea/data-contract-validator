@@ -52,6 +52,22 @@ def test_cli_returns_1_for_live_tennis_data(monkeypatch, capsys):
     assert "Record 2" in captured.out
 
 
+def test_cli_returns_3_for_live_tennis_api_without_env(monkeypatch, capsys):
+    monkeypatch.delenv("TENNIS_API_KEY", raising=False)
+    monkeypatch.delenv("TENNIS_API_BASE_URL", raising=False)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["data-contract-validator", "--live-tennis-api"],
+    )
+
+    exit_code = main()
+    captured = capsys.readouterr()
+
+    assert exit_code == 3
+    assert "Missing API key" in captured.out
+
+
 def test_cli_returns_2_for_missing_file(monkeypatch, capsys):
     monkeypatch.setattr(
         sys,

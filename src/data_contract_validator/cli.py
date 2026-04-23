@@ -1,7 +1,10 @@
 import argparse
 
+import requests
+
 from data_contract_validator.providers import (
     MockTennisLiveProvider,
+    TennisApiProvider,
     validate_live_tennis_matches,
 )
 from data_contract_validator.reporting import generate_html_report, write_html_report
@@ -15,7 +18,7 @@ from data_contract_validator.validator import (
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="data-contract-validator",
-        description="Validate JSON/CSV data or fetch mock live tennis data.",
+        description="Validate JSON/CSV data or fetch tennis live data.",
     )
 
     input_group = parser.add_mutually_exclusive_group(required=True)
@@ -28,6 +31,11 @@ def create_parser() -> argparse.ArgumentParser:
         "--live-tennis",
         action="store_true",
         help="Fetch mock live tennis matches and validate them",
+    )
+    input_group.add_argument(
+        "--live-tennis-api",
+        action="store_true",
+        help="Fetch live tennis matches from a real API and validate them",
     )
 
     parser.add_argument(
@@ -46,6 +54,10 @@ def main() -> int:
     try:
         if args.live_tennis:
             provider = MockTennisLiveProvider()
+            raw_matches = provider.fetch_live_matches()
+            valid_records, errors = validate_live_tennis_matches(raw_matches)
+        elif args.live_tennis_api:
+            provider = TennisApiProvider()
             raw_matches = provider.fetch_live_matches()
             valid_records, errors = validate_live_tennis_matches(raw_matches)
         else:
@@ -71,6 +83,9 @@ def main() -> int:
     except ValueError as exc:
         print(f"Error: {exc}")
         return 3
+    except requests.exceptions.RequestException as exc:
+        print(f"Error: failed to fetch live tennis API data: {exc}")
+        return 4
 
 
 if __name__ == "__main__":

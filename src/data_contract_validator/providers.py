@@ -49,7 +49,9 @@ class TennisApiProvider:
             raise ValueError("Missing API key. Please set TENNIS_API_KEY.")
 
         if not self.base_url:
-            raise ValueError("Missing API base URL. Please set TENNIS_API_BASE_URL.")
+            raise ValueError(
+                "Missing API base URL. Please set TENNIS_API_BASE_URL."
+            )
 
         response = requests.get(
             self.base_url,
@@ -60,10 +62,20 @@ class TennisApiProvider:
 
         payload = response.json()
 
-        if not isinstance(payload, list):
-            raise ValueError("Expected API response to be a list of match objects")
+        if isinstance(payload, dict):
+            if "results" in payload and isinstance(payload["results"], list):
+                return payload["results"]
 
-        return payload
+            if "matches" in payload and isinstance(payload["matches"], list):
+                return payload["matches"]
+
+        if isinstance(payload, list):
+            return payload
+
+        raise ValueError(
+            "Expected API response to be a list of matches "
+            "or a dict with 'results' or 'matches'"
+        )
 
 
 def map_to_tennis_match_contract(raw_match: dict[str, Any]) -> TennisMatchContract:
