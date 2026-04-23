@@ -2,7 +2,7 @@ import argparse
 
 from data_contract_validator.validator import (
     build_validation_report,
-    load_json_file,
+    load_data_file,
     validate_users,
 )
 
@@ -10,11 +10,11 @@ from data_contract_validator.validator import (
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="data-contract-validator",
-        description="Validate JSON data against the UserContract schema.",
+        description="Validate JSON or CSV data against the UserContract schema.",
     )
     parser.add_argument(
         "file_path",
-        help="Path to the JSON file containing a list of user records",
+        help="Path to the JSON or CSV file containing user records",
     )
     return parser
 
@@ -24,7 +24,7 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        data = load_json_file(args.file_path)
+        data = load_data_file(args.file_path)
         valid_users, errors = validate_users(data)
         report = build_validation_report(valid_users, errors)
         print(report)
