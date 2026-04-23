@@ -2,8 +2,11 @@ import os
 from typing import Any
 
 import requests
+from dotenv import load_dotenv
 
 from data_contract_validator.models import TennisMatchContract
+
+load_dotenv()
 
 
 class MockTennisLiveProvider:
@@ -33,13 +36,20 @@ class MockTennisLiveProvider:
 
 
 class TennisApiProvider:
-    def __init__(self, base_url: str, api_key_env: str = "TENNIS_API_KEY") -> None:
-        self.base_url = base_url
+    def __init__(
+        self,
+        base_url: str | None = None,
+        api_key_env: str = "TENNIS_API_KEY",
+    ) -> None:
+        self.base_url = base_url or os.getenv("TENNIS_API_BASE_URL")
         self.api_key = os.getenv(api_key_env)
 
     def fetch_live_matches(self) -> list[dict[str, Any]]:
         if not self.api_key:
             raise ValueError("Missing API key. Please set TENNIS_API_KEY.")
+
+        if not self.base_url:
+            raise ValueError("Missing API base URL. Please set TENNIS_API_BASE_URL.")
 
         response = requests.get(
             self.base_url,

@@ -1,5 +1,8 @@
+import pytest
+
 from data_contract_validator.providers import (
     MockTennisLiveProvider,
+    TennisApiProvider,
     map_to_tennis_match_contract,
     validate_live_tennis_matches,
 )
@@ -43,3 +46,23 @@ def test_validate_live_tennis_matches_splits_valid_and_invalid_matches():
     assert len(valid_matches) == 1
     assert len(errors) == 1
     assert errors[0]["record_number"] == 2
+
+
+def test_tennis_api_provider_raises_for_missing_api_key(monkeypatch):
+    monkeypatch.delenv("TENNIS_API_KEY", raising=False)
+    monkeypatch.setenv("TENNIS_API_BASE_URL", "https://example.com/live")
+
+    provider = TennisApiProvider()
+
+    with pytest.raises(ValueError, match="Missing API key"):
+        provider.fetch_live_matches()
+
+
+def test_tennis_api_provider_raises_for_missing_base_url(monkeypatch):
+    monkeypatch.setenv("TENNIS_API_KEY", "fake-key")
+    monkeypatch.delenv("TENNIS_API_BASE_URL", raising=False)
+
+    provider = TennisApiProvider()
+
+    with pytest.raises(ValueError, match="Missing API base URL"):
+        provider.fetch_live_matches()
