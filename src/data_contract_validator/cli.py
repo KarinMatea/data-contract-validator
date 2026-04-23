@@ -1,5 +1,6 @@
 import argparse
 
+from data_contract_validator.reporting import generate_html_report, write_html_report
 from data_contract_validator.validator import (
     build_validation_report,
     load_data_file,
@@ -16,6 +17,11 @@ def create_parser() -> argparse.ArgumentParser:
         "file_path",
         help="Path to the JSON or CSV file containing user records",
     )
+    parser.add_argument(
+        "--html-report",
+        dest="html_report",
+        help="Optional path to write an HTML validation report",
+    )
     return parser
 
 
@@ -26,8 +32,14 @@ def main() -> int:
     try:
         data = load_data_file(args.file_path)
         valid_users, errors = validate_users(data)
+
         report = build_validation_report(valid_users, errors)
         print(report)
+
+        if args.html_report:
+            html_report = generate_html_report(valid_users, errors)
+            write_html_report(args.html_report, html_report)
+            print(f"\nHTML report written to: {args.html_report}")
 
         if errors:
             return 1

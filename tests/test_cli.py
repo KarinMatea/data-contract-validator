@@ -47,3 +47,25 @@ def test_cli_returns_2_for_missing_file(monkeypatch, capsys):
 
     assert exit_code == 2
     assert "file not found" in captured.out.lower()
+
+
+def test_cli_writes_html_report(monkeypatch, capsys, tmp_path):
+    report_path = tmp_path / "report.html"
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "data-contract-validator",
+            "sample_data/users.json",
+            "--html-report",
+            str(report_path),
+        ],
+    )
+
+    exit_code = main()
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert report_path.exists()
+    assert "HTML report written to" in captured.out
