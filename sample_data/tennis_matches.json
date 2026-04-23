@@ -1,0 +1,22 @@
+[
+  {
+    "tournament_name": "Wimbledon",
+    "surface": "Grass",
+    "round": "F",
+    "best_of": 5,
+    "player_1": "Carlos Alcaraz",
+    "player_2": "Novak Djokovic",
+    "winner": "Carlos Alcaraz",
+    "score": "1-6 7-6(6) 6-1 3-6 6-4"
+  },
+  {
+    "tournament_name": "Australian Open",
+    "surface": "Hard",
+    "round": "SF",
+    "best_of": 5,
+    "player_1": "Jannik Sinner",
+    "player_2": "Daniil Medvedev",
+    "winner": "Roger Federer",
+    "score": "6-3 6-3 6-3"
+  }
+]
