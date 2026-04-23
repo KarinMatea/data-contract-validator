@@ -1,5 +1,9 @@
 import argparse
 
+from data_contract_validator.providers import (
+    MockTennisLiveProvider,
+    validate_live_tennis_matches,
+)
 from data_contract_validator.reporting import generate_html_report, write_html_report
 from data_contract_validator.validator import (
     build_validation_report,
@@ -11,17 +15,27 @@ from data_contract_validator.validator import (
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="data-contract-validator",
-        description="Validate JSON or CSV data against the UserContract schema.",
+        description="Validate JSON/CSV data or fetch mock live tennis data.",
     )
-    parser.add_argument(
+
+    input_group = parser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument(
         "file_path",
+        nargs="?",
         help="Path to the JSON or CSV file containing user records",
     )
+    input_group.add_argument(
+        "--live-tennis",
+        action="store_true",
+        help="Fetch mock live tennis matches and validate them",
+    )
+
     parser.add_argument(
         "--html-report",
         dest="html_report",
         help="Optional path to write an HTML validation report",
     )
+
     return parser
 
 
@@ -30,14 +44,19 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        data = load_data_file(args.file_path)
-        valid_users, errors = validate_users(data)
+        if args.live_tennis:
+            provider = MockTennisLiveProvider()
+            raw_matches = provider.fetch_live_matches()
+            valid_records, errors = validate_live_tennis_matches(raw_matches)
+        else:
+            data = load_data_file(args.file_path)
+            valid_records, errors = validate_users(data)
 
-        report = build_validation_report(valid_users, errors)
+        report = build_validation_report(valid_records, errors)
         print(report)
 
         if args.html_report:
-            html_report = generate_html_report(valid_users, errors)
+            html_report = generate_html_report(valid_records, errors)
             write_html_report(args.html_report, html_report)
             print(f"\nHTML report written to: {args.html_report}")
 

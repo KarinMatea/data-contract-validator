@@ -35,6 +35,23 @@ def test_cli_returns_1_for_invalid_csv_data(monkeypatch, capsys):
     assert "Record 3" in captured.out
 
 
+def test_cli_returns_1_for_live_tennis_data(monkeypatch, capsys):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["data-contract-validator", "--live-tennis"],
+    )
+
+    exit_code = main()
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "Validation Report" in captured.out
+    assert "Valid records: 1" in captured.out
+    assert "Invalid records: 1" in captured.out
+    assert "Record 2" in captured.out
+
+
 def test_cli_returns_2_for_missing_file(monkeypatch, capsys):
     monkeypatch.setattr(
         sys,
