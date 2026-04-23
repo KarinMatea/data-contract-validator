@@ -1,6 +1,7 @@
 import csv
 import json
 from pathlib import Path
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -40,6 +41,18 @@ def load_data_file(file_path: str) -> list[dict]:
     raise ValueError("Unsupported file type. Please provide a .json or .csv file.")
 
 
+def get_value_by_path(data: dict, path: tuple[Any, ...]) -> Any:
+    current = data
+
+    for part in path:
+        if isinstance(current, dict):
+            current = current.get(part)
+        else:
+            return None
+
+    return current
+
+
 def validate_users(data: list[dict]) -> tuple[list[UserContract], list[dict]]:
     valid_users = []
     errors = []
@@ -49,11 +62,25 @@ def validate_users(data: list[dict]) -> tuple[list[UserContract], list[dict]]:
             user = UserContract.model_validate(item)
             valid_users.append(user)
         except ValidationError as exc:
+            formatted_errors = []
+
+            for detail in exc.errors():
+                location = tuple(detail["loc"])
+                formatted_errors.append(
+                    {
+                        "field": ".".join(str(part) for part in location),
+                        "message": detail["msg"],
+                        "error_type": detail["type"],
+                        "input_value": get_value_by_path(item, location),
+                    }
+                )
+
             errors.append(
                 {
                     "index": index,
+                    "record_number": index + 1,
                     "input": item,
-                    "errors": exc.errors(),
+                    "errors": formatted_errors,
                 }
             )
 
@@ -72,11 +99,12 @@ def build_validation_report(valid_users: list[UserContract], errors: list[dict])
         lines.append("Error details:")
 
         for error in errors:
-            lines.append(f"- Record index {error['index']}")
+            lines.append(f"- Record {error['record_number']}")
 
             for detail in error["errors"]:
-                field_path = ".".join(str(part) for part in detail["loc"])
-                message = detail["msg"]
-                lines.append(f"  - Field '{field_path}': {message}")
+                lines.append(
+                    f"  - Field '{detail['field']}': {detail['message']} "
+                    f"(value={detail['input_value']!r})"
+                )
 
     return "\n".join(lines)

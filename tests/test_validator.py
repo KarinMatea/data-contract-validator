@@ -1,6 +1,7 @@
 import pytest
 
 from data_contract_validator.validator import (
+    build_validation_report,
     load_csv_file,
     load_data_file,
     load_json_file,
@@ -31,6 +32,7 @@ def test_validate_users_splits_valid_and_invalid_records_for_json():
     assert len(valid_users) == 2
     assert len(errors) == 1
     assert errors[0]["index"] == 2
+    assert errors[0]["record_number"] == 3
 
 
 def test_validate_users_splits_valid_and_invalid_records_for_csv():
@@ -40,7 +42,32 @@ def test_validate_users_splits_valid_and_invalid_records_for_csv():
 
     assert len(valid_users) == 2
     assert len(errors) == 1
-    assert errors[0]["index"] == 2
+    assert errors[0]["record_number"] == 3
+
+
+def test_validation_error_contains_field_details():
+    data = load_json_file("sample_data/users.json")
+
+    _, errors = validate_users(data)
+
+    first_error = errors[0]["errors"][0]
+
+    assert "field" in first_error
+    assert "message" in first_error
+    assert "error_type" in first_error
+    assert "input_value" in first_error
+
+
+def test_build_validation_report_contains_record_and_value():
+    data = load_json_file("sample_data/users.json")
+    valid_users, errors = validate_users(data)
+
+    report = build_validation_report(valid_users, errors)
+
+    assert "Validation Report" in report
+    assert "Record 3" in report
+    assert "Field 'email'" in report
+    assert "value='invalid-email'" in report
 
 
 def test_load_json_file_raises_for_non_list_json(tmp_path):

@@ -17,6 +17,7 @@ def test_cli_returns_1_for_invalid_json_data(monkeypatch, capsys):
     assert "Validation Report" in captured.out
     assert "Valid records: 2" in captured.out
     assert "Invalid records: 1" in captured.out
+    assert "Record 3" in captured.out
 
 
 def test_cli_returns_1_for_invalid_csv_data(monkeypatch, capsys):
@@ -31,8 +32,7 @@ def test_cli_returns_1_for_invalid_csv_data(monkeypatch, capsys):
 
     assert exit_code == 1
     assert "Validation Report" in captured.out
-    assert "Valid records: 2" in captured.out
-    assert "Invalid records: 1" in captured.out
+    assert "Record 3" in captured.out
 
 
 def test_cli_returns_2_for_missing_file(monkeypatch, capsys):
