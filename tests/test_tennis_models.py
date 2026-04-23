@@ -23,7 +23,10 @@ def test_valid_tennis_match_contract():
 
 
 def test_winner_must_match_one_of_the_players():
-    with pytest.raises(ValidationError, match="winner must match player_1 or player_2"):
+    with pytest.raises(
+        ValidationError,
+        match="winner must match player_1 or player_2",
+    ):
         TennisMatchContract(
             tournament_name="Australian Open",
             surface="Hard",
@@ -37,7 +40,10 @@ def test_winner_must_match_one_of_the_players():
 
 
 def test_players_must_be_different():
-    with pytest.raises(ValidationError, match="player_1 and player_2 must be different players"):
+    with pytest.raises(
+        ValidationError,
+        match="player_1 and player_2 must be different players",
+    ):
         TennisMatchContract(
             tournament_name="US Open",
             surface="Hard",

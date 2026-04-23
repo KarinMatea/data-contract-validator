@@ -80,7 +80,7 @@ def generate_html_report(valid_users: list[UserContract], errors: list[dict]) ->
 
   <section>
     <h2>Error details</h2>
-    {''.join(error_items) if error_items else '<p>No validation errors found.</p>'}
+    {"".join(error_items) if error_items else "<p>No validation errors found.</p>"}
   </section>
 </body>
 </html>
