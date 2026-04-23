@@ -36,3 +36,25 @@ def validate_users(data: list[dict]) -> tuple[list[UserContract], list[dict]]:
             )
 
     return valid_users, errors
+
+
+def build_validation_report(valid_users: list[UserContract], errors: list[dict]) -> str:
+    lines = []
+    lines.append("Validation Report")
+    lines.append("=================")
+    lines.append(f"Valid records: {len(valid_users)}")
+    lines.append(f"Invalid records: {len(errors)}")
+
+    if errors:
+        lines.append("")
+        lines.append("Error details:")
+
+        for error in errors:
+            lines.append(f"- Record index {error['index']}")
+
+            for detail in error["errors"]:
+                field_path = ".".join(str(part) for part in detail["loc"])
+                message = detail["msg"]
+                lines.append(f"  - Field '{field_path}': {message}")
+
+    return "\n".join(lines)
