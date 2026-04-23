@@ -8,7 +8,9 @@ Ein Lernprojekt, das CSV- und JSON-Daten gegen definierte Python-Modelle validie
 - Validierung von CSV-Dateien
 - Fehlerreport im Terminal
 - Automatische Tests mit pytest
+- Linting mit Ruff
 - CI mit GitHub Actions
+- Installierbare CLI
 
 ## Installation
 
@@ -18,6 +20,13 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
+## CLI verwenden
+
+```bash
+data-contract-validator sample_data/users.json
+data-contract-validator sample_data/users.csv
+```
+
 ## Tests
 
 ```bash
@@ -25,9 +34,8 @@ ruff check .
 pytest
 ```
 
-## Beispiel
+## Alternative Ausführung
 
 ```bash
 python -m data_contract_validator sample_data/users.json
-python -m data_contract_validator sample_data/users.csv
 ```

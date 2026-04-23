@@ -18,6 +18,9 @@ dev = [
     "ruff>=0.6.0",
 ]
 
+[project.scripts]
+data-contract-validator = "data_contract_validator.cli:main"
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
