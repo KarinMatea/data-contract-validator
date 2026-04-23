@@ -4,6 +4,7 @@ from data_contract_validator.providers import (
     MockTennisLiveProvider,
     TennisApiProvider,
     map_to_tennis_match_contract,
+    normalize_raw_match,
     validate_live_tennis_matches,
 )
 
@@ -16,6 +17,25 @@ def test_mock_provider_returns_matches():
     assert isinstance(matches, list)
     assert len(matches) == 2
     assert matches[0]["event_name"] == "Wimbledon"
+
+
+def test_normalize_raw_match_supports_alternative_field_names():
+    raw_match = {
+        "tournament": "Wimbledon",
+        "surface": "Grass",
+        "round": "F",
+        "best_of": 5,
+        "player1": "Carlos Alcaraz",
+        "player2": "Novak Djokovic",
+        "winner": "Carlos Alcaraz",
+        "score": "1-6 7-6(6) 6-1 3-6 6-4",
+    }
+
+    normalized_match = normalize_raw_match(raw_match)
+
+    assert normalized_match["tournament_name"] == "Wimbledon"
+    assert normalized_match["player_1"] == "Carlos Alcaraz"
+    assert normalized_match["player_2"] == "Novak Djokovic"
 
 
 def test_map_to_tennis_match_contract_returns_valid_model():
@@ -35,6 +55,25 @@ def test_map_to_tennis_match_contract_returns_valid_model():
     assert match.tournament_name == "Wimbledon"
     assert match.surface == "Grass"
     assert match.winner == "Carlos Alcaraz"
+
+
+def test_map_to_tennis_match_contract_with_alternative_keys():
+    raw_match = {
+        "tournament_name": "Wimbledon",
+        "surface": "Grass",
+        "round": "F",
+        "best_of": 5,
+        "player_1": "Carlos Alcaraz",
+        "player_2": "Novak Djokovic",
+        "winner": "Carlos Alcaraz",
+        "score": "1-6 7-6(6) 6-1 3-6 6-4",
+    }
+
+    match = map_to_tennis_match_contract(raw_match)
+
+    assert match.tournament_name == "Wimbledon"
+    assert match.player_1 == "Carlos Alcaraz"
+    assert match.player_2 == "Novak Djokovic"
 
 
 def test_validate_live_tennis_matches_splits_valid_and_invalid_matches():

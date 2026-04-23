@@ -78,17 +78,57 @@ class TennisApiProvider:
         )
 
 
+def get_first_available_value(
+    raw_match: dict[str, Any],
+    candidate_keys: list[str],
+) -> Any:
+    for key in candidate_keys:
+        if key in raw_match and raw_match[key] not in (None, ""):
+            return raw_match[key]
+
+    raise KeyError(f"Missing required field. Tried keys: {candidate_keys}")
+
+
+def normalize_raw_match(raw_match: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "tournament_name": get_first_available_value(
+            raw_match,
+            ["event_name", "tournament_name", "tournament", "competition_name"],
+        ),
+        "surface": get_first_available_value(
+            raw_match,
+            ["court_surface", "surface"],
+        ),
+        "round": get_first_available_value(
+            raw_match,
+            ["match_round", "round"],
+        ),
+        "best_of": get_first_available_value(
+            raw_match,
+            ["format_best_of", "best_of"],
+        ),
+        "player_1": get_first_available_value(
+            raw_match,
+            ["home_player", "player_1", "player1", "competitor_1"],
+        ),
+        "player_2": get_first_available_value(
+            raw_match,
+            ["away_player", "player_2", "player2", "competitor_2"],
+        ),
+        "winner": get_first_available_value(
+            raw_match,
+            ["match_winner", "winner"],
+        ),
+        "score": get_first_available_value(
+            raw_match,
+            ["final_score", "score"],
+        ),
+    }
+
+
 def map_to_tennis_match_contract(raw_match: dict[str, Any]) -> TennisMatchContract:
-    return TennisMatchContract(
-        tournament_name=raw_match["event_name"],
-        surface=raw_match["court_surface"],
-        round=raw_match["match_round"],
-        best_of=raw_match["format_best_of"],
-        player_1=raw_match["home_player"],
-        player_2=raw_match["away_player"],
-        winner=raw_match["match_winner"],
-        score=raw_match["final_score"],
-    )
+    normalized_match = normalize_raw_match(raw_match)
+    return TennisMatchContract(**normalized_match)
 
 
 def validate_live_tennis_matches(
