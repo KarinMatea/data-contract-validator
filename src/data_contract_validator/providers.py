@@ -50,9 +50,7 @@ class TennisApiProvider:
             raise ValueError("Missing API key. Please set TENNIS_API_KEY.")
 
         if not self.base_url:
-            raise ValueError(
-                "Missing API base URL. Please set TENNIS_API_BASE_URL."
-            )
+            raise ValueError("Missing API base URL. Please set TENNIS_API_BASE_URL.")
 
         response = requests.get(
             self.base_url,
@@ -76,9 +74,7 @@ class TheOddsApiProvider:
 
     def fetch_tennis_odds(self) -> list[dict[str, Any]]:
         if not self.api_key:
-            raise ValueError(
-                "Missing API key. Please set TENNIS_ODDS_API_KEY."
-            )
+            raise ValueError("Missing API key. Please set TENNIS_ODDS_API_KEY.")
 
         url = f"{self.base_url}/sports/{self.sport}/odds"
         params = {
@@ -95,9 +91,7 @@ class TheOddsApiProvider:
         payload = response.json()
 
         if not isinstance(payload, list):
-            raise ValueError(
-                "Expected The Odds API response to be a list of events"
-            )
+            raise ValueError("Expected The Odds API response to be a list of events")
 
         return payload
 

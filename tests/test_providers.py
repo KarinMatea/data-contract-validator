@@ -197,7 +197,8 @@ def test_tennis_api_provider_raises_for_missing_api_key(monkeypatch):
 
     with pytest.raises(ValueError, match="Missing API key"):
         provider.fetch_live_matches()
-        
+
+
 def test_normalize_api_tennis_match_maps_semifinals_text():
     raw_match = {
         "event_first_player": "Player A",

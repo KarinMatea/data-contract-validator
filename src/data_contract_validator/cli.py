@@ -2,6 +2,12 @@ import argparse
 
 import requests
 
+from data_contract_validator.console import (
+    print_errors_table,
+    print_generic_success_table,
+    print_odds_events_table,
+    print_summary,
+)
 from data_contract_validator.providers import (
     MockTennisLiveProvider,
     TennisApiProvider,
@@ -60,24 +66,37 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
+        mode = "users"
+
         if args.live_tennis:
             provider = MockTennisLiveProvider()
             raw_matches = provider.fetch_live_matches()
             valid_records, errors = validate_live_tennis_matches(raw_matches)
+            mode = "tennis"
         elif args.live_tennis_api:
             provider = TennisApiProvider()
             raw_matches = provider.fetch_live_matches()
             valid_records, errors = validate_api_tennis_matches(raw_matches)
+            mode = "tennis"
         elif args.live_tennis_odds:
             provider = TheOddsApiProvider()
             raw_events = provider.fetch_tennis_odds()
             valid_records, errors = validate_the_odds_events(raw_events)
+            mode = "odds"
         else:
             data = load_data_file(args.file_path)
             valid_records, errors = validate_users(data)
 
         report = build_validation_report(valid_records, errors)
         print(report)
+        print_summary(valid_records, errors)
+
+        if mode == "odds":
+            print_odds_events_table(valid_records)
+        else:
+            print_generic_success_table(valid_records)
+
+        print_errors_table(errors)
 
         if args.html_report:
             html_report = generate_html_report(valid_records, errors)
