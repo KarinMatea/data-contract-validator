@@ -46,3 +46,21 @@ class TennisMatchContract(BaseModel):
             raise ValueError("winner must match player_1 or player_2")
 
         return self
+
+
+class TennisOddsEventContract(BaseModel):
+    event_id: str = Field(min_length=1)
+    sport_key: str = Field(min_length=1)
+    sport_title: str = Field(min_length=1)
+    commence_time: str = Field(min_length=1)
+    home_team: str = Field(min_length=1)
+    away_team: str = Field(min_length=1)
+    bookmaker_count: int = Field(ge=0)
+    market_count: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def validate_event_rules(self):
+        if self.home_team == self.away_team:
+            raise ValueError("home_team and away_team must be different")
+
+        return self

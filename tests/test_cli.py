@@ -68,6 +68,21 @@ def test_cli_returns_3_for_live_tennis_api_without_env(monkeypatch, capsys):
     assert "Missing API key" in captured.out
 
 
+def test_cli_returns_3_for_live_tennis_odds_without_env(monkeypatch, capsys):
+    monkeypatch.delenv("TENNIS_ODDS_API_KEY", raising=False)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["data-contract-validator", "--live-tennis-odds"],
+    )
+
+    exit_code = main()
+    captured = capsys.readouterr()
+
+    assert exit_code == 3
+    assert "Missing API key" in captured.out
+
+
 def test_cli_returns_2_for_missing_file(monkeypatch, capsys):
     monkeypatch.setattr(
         sys,

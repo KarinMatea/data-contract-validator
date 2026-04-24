@@ -5,7 +5,7 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
-from data_contract_validator.models import TennisMatchContract
+from data_contract_validator.models import TennisMatchContract, TennisOddsEventContract
 
 load_dotenv()
 
@@ -63,6 +63,43 @@ class TennisApiProvider:
 
         payload = response.json()
         return extract_match_list(payload)
+
+
+class TheOddsApiProvider:
+    def __init__(self) -> None:
+        self.api_key = os.getenv("TENNIS_ODDS_API_KEY")
+        self.sport = os.getenv("TENNIS_ODDS_SPORT", "upcoming")
+        self.regions = os.getenv("TENNIS_ODDS_REGIONS", "uk")
+        self.markets = os.getenv("TENNIS_ODDS_MARKETS", "h2h")
+        self.odds_format = os.getenv("TENNIS_ODDS_FORMAT", "decimal")
+        self.base_url = "https://api.the-odds-api.com/v4"
+
+    def fetch_tennis_odds(self) -> list[dict[str, Any]]:
+        if not self.api_key:
+            raise ValueError(
+                "Missing API key. Please set TENNIS_ODDS_API_KEY."
+            )
+
+        url = f"{self.base_url}/sports/{self.sport}/odds"
+        params = {
+            "apiKey": self.api_key,
+            "regions": self.regions,
+            "markets": self.markets,
+            "oddsFormat": self.odds_format,
+            "dateFormat": "iso",
+        }
+
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+
+        payload = response.json()
+
+        if not isinstance(payload, list):
+            raise ValueError(
+                "Expected The Odds API response to be a list of events"
+            )
+
+        return payload
 
 
 def extract_match_list(payload: Any) -> list[dict[str, Any]]:
@@ -157,15 +194,24 @@ def normalize_api_tennis_match(raw_match: dict[str, Any]) -> dict[str, Any]:
     elif winner is None:
         winner = "LIVE_MATCH_IN_PROGRESS"
 
-    tournament_round = raw_match.get("tournament_round", "")
-    if tournament_round == "Quarter-finals":
-        normalized_round = "QF"
-    elif tournament_round == "Semi-finals":
-        normalized_round = "SF"
-    elif tournament_round == "Final":
-        normalized_round = "F"
-    else:
-        normalized_round = raw_match.get("tournament_round") or "R32"
+    tournament_round = (raw_match.get("tournament_round") or "").strip()
+
+    round_mapping = {
+        "Quarter-finals": "QF",
+        "Quarterfinals": "QF",
+        "QF": "QF",
+        "Semi-finals": "SF",
+        "Semifinals": "SF",
+        "SF": "SF",
+        "Final": "F",
+        "F": "F",
+        "R128": "R128",
+        "R64": "R64",
+        "R32": "R32",
+        "R16": "R16",
+    }
+
+    normalized_round = round_mapping.get(tournament_round, "R32")
 
     return {
         "tournament_name": raw_match["tournament_name"],
@@ -179,6 +225,22 @@ def normalize_api_tennis_match(raw_match: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def normalize_the_odds_event(raw_event: dict[str, Any]) -> dict[str, Any]:
+    bookmakers = raw_event.get("bookmakers", [])
+    market_count = sum(len(bookmaker.get("markets", [])) for bookmaker in bookmakers)
+
+    return {
+        "event_id": raw_event["id"],
+        "sport_key": raw_event["sport_key"],
+        "sport_title": raw_event["sport_title"],
+        "commence_time": raw_event["commence_time"],
+        "home_team": raw_event["home_team"],
+        "away_team": raw_event["away_team"],
+        "bookmaker_count": len(bookmakers),
+        "market_count": market_count,
+    }
+
+
 def map_to_tennis_match_contract(raw_match: dict[str, Any]) -> TennisMatchContract:
     normalized_match = normalize_raw_match(raw_match)
     return TennisMatchContract(**normalized_match)
@@ -187,6 +249,13 @@ def map_to_tennis_match_contract(raw_match: dict[str, Any]) -> TennisMatchContra
 def map_api_tennis_to_contract(raw_match: dict[str, Any]) -> TennisMatchContract:
     normalized_match = normalize_api_tennis_match(raw_match)
     return TennisMatchContract(**normalized_match)
+
+
+def map_the_odds_event_to_contract(
+    raw_event: dict[str, Any],
+) -> TennisOddsEventContract:
+    normalized_event = normalize_the_odds_event(raw_event)
+    return TennisOddsEventContract(**normalized_event)
 
 
 def validate_live_tennis_matches(
@@ -247,3 +316,33 @@ def validate_api_tennis_matches(
             )
 
     return valid_matches, errors
+
+
+def validate_the_odds_events(
+    raw_events: list[dict[str, Any]],
+) -> tuple[list[TennisOddsEventContract], list[dict[str, Any]]]:
+    valid_events = []
+    errors = []
+
+    for index, raw_event in enumerate(raw_events):
+        try:
+            event = map_the_odds_event_to_contract(raw_event)
+            valid_events.append(event)
+        except Exception as exc:
+            errors.append(
+                {
+                    "index": index,
+                    "record_number": index + 1,
+                    "input": raw_event,
+                    "errors": [
+                        {
+                            "field": "provider_payload",
+                            "message": str(exc),
+                            "error_type": exc.__class__.__name__,
+                            "input_value": raw_event,
+                        }
+                    ],
+                }
+            )
+
+    return valid_events, errors

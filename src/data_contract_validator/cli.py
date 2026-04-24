@@ -5,7 +5,10 @@ import requests
 from data_contract_validator.providers import (
     MockTennisLiveProvider,
     TennisApiProvider,
+    TheOddsApiProvider,
+    validate_api_tennis_matches,
     validate_live_tennis_matches,
+    validate_the_odds_events,
 )
 from data_contract_validator.reporting import generate_html_report, write_html_report
 from data_contract_validator.validator import (
@@ -37,6 +40,11 @@ def create_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Fetch live tennis matches from a real API and validate them",
     )
+    input_group.add_argument(
+        "--live-tennis-odds",
+        action="store_true",
+        help="Fetch live tennis odds events from The Odds API and validate them",
+    )
 
     parser.add_argument(
         "--html-report",
@@ -59,7 +67,11 @@ def main() -> int:
         elif args.live_tennis_api:
             provider = TennisApiProvider()
             raw_matches = provider.fetch_live_matches()
-            valid_records, errors = validate_live_tennis_matches(raw_matches)
+            valid_records, errors = validate_api_tennis_matches(raw_matches)
+        elif args.live_tennis_odds:
+            provider = TheOddsApiProvider()
+            raw_events = provider.fetch_tennis_odds()
+            valid_records, errors = validate_the_odds_events(raw_events)
         else:
             data = load_data_file(args.file_path)
             valid_records, errors = validate_users(data)
@@ -84,7 +96,7 @@ def main() -> int:
         print(f"Error: {exc}")
         return 3
     except requests.exceptions.RequestException as exc:
-        print(f"Error: failed to fetch live tennis API data: {exc}")
+        print(f"Error: failed to fetch live data: {exc}")
         return 4
 
 
