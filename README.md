@@ -1,3 +1,5 @@
+[![CI](https://github.com/KarinMatea/data-contract-validator/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/KarinMatea/data-contract-validator/actions/workflows/ci.yml)
+
 # Data Contract Validator
 
 Ein Python-Projekt zum Validieren strukturierter Daten aus JSON-, CSV- und Live-Sportquellen. Das Repository begann als kompakter Data-Contract-Validator für User-Daten und wurde schrittweise zu einem praxisnahen Tennis-Projekt erweitert: mit Domain-Modellen, Provider-Adaptern, CLI, HTML-Report und CI über GitHub Actions.
